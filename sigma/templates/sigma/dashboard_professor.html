@@ -1,0 +1,128 @@
+{% extends 'sigma/base.html' %}
+
+{% block content %}
+<h3 class="mb-4 text-secondary">Início - Ambiente do Professor</h3>
+
+<!-- Alertas de Sucesso ou Erro -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-start border-danger border-4 h-100">
+            <div class="card-body text-center py-4">
+                <h6 class="text-muted">Aprovações Pendentes</h6>
+                <h1 class="display-4 text-danger mb-0">{{ qtd_pendentes }}</h1>
+                <small>Documentos aguardando sua análise</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-white text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Tarefas Urgentes</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for entrega in entregas_pendentes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <b>{{ entrega.monitoria.monitor.get_full_name|default:entrega.monitoria.monitor.username }}</b> 
+                            ({{ entrega.monitoria.curso }})<br>
+                            <small class="text-muted">Frequência - {{ entrega.mes_referencia|date:"F/Y" }}</small>
+                        </div>
+                        <div class="btn-group">
+                            <!-- Visualizar PDF -->
+                            {% if entrega.arquivo_anexo_ii %}
+                            <a href="{{ entrega.arquivo_anexo_ii.url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Visualizar Documento"><i class="bi bi-eye"></i></a>
+                            {% endif %}
+                            
+                            <!-- Botão Aprovar -->
+                            <a href="{% url 'avaliar_entrega' entrega.id 'aprovar' %}" class="btn btn-sm btn-outline-success" title="Aprovar"><i class="bi bi-check-lg"></i></a>
+                            
+                            <!-- Botão Recusar (Abre Modal) -->
+                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ entrega.id }}" title="Solicitar Ajuste"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </li>
+
+                    <!-- Modal de Recusa Específico para esta Entrega -->
+                    <div class="modal fade" id="modalRecusa{{ entrega.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{% url 'avaliar_entrega' entrega.id 'recusar' %}">
+                                    {% csrf_token %}
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Solicitar Ajuste de Documento</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Aluno: <b>{{ entrega.monitoria.monitor.get_full_name }}</b></p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Justificativa da Recusa (Feedback):</label>
+                                            <textarea class="form-control" name="motivo_recusa" rows="3" required placeholder="Ex: Faltou assinar a página 2..."></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger">Confirmar Recusa</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <li class="list-group-item text-success text-center py-4">
+                        <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                        Nenhuma aprovação pendente no momento.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 text-secondary"><i class="bi bi-people"></i> Meus Monitores</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome do Aluno</th>
+                    <th>Disciplina</th>
+                    <th>Situação Geral</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for monitoria in monitorias %}
+                <tr>
+                    <td>{{ monitoria.monitor.get_full_name|default:monitoria.monitor.username }}</td>
+                    <td>{{ monitoria.disciplina }}</td>
+                    <td>
+                        <!-- Checa se há entregas pendentes para esta monitoria específica -->
+                        {% if monitoria.entregamensal_set.filter.status == 'P' %}
+                            <span class="badge bg-warning text-dark">Pendência no Mês</span>
+                        {% else %}
+                            <span class="badge bg-success">Em dia</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td><a href="{% url 'historico_monitor' monitoria.id %}" class="btn btn-sm btn-outline-secondary">Abrir Histórico</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-3">Nenhum monitor vinculado ao seu perfil ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

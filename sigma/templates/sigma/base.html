@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigma - Monitorias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f4f6f9; overflow-x: hidden; }
+        .sidebar { min-height: 100vh; background-color: #2b2b2b; color: #fff; padding-top: 20px; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: 300; padding: 0 20px 20px 20px; border-bottom: 1px solid #444; margin-bottom: 20px; letter-spacing: 1px; }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; }
+        .sidebar-menu li a { display: block; padding: 12px 20px; color: #d1d1d1; text-decoration: none; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background-color: #3e3e3e; color: #fff; border-left: 4px solid #28a745; padding-left: 16px; }
+        .sidebar-menu li a.sair { color: #ff6b6b; margin-top: 20px; border-left: none; padding-left: 20px; }
+        .sidebar-menu li a.sair:hover { background-color: #3e3e3e; color: #ff4c4c; }
+        .main-content { padding: 30px; }
+        .card { border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn-success { background-color: #28a745; border: none; }
+        .btn-success:hover { background-color: #218838; }
+        .user-info { padding: 0 20px 20px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #444; margin-bottom: 20px; }
+        .user-avatar { width: 40px; height: 40px; background-color: #555; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        {% if user.is_authenticated %}
+        <!-- Barra Lateral Esquerda -->
+        <nav class="sidebar col-md-3 col-lg-2 d-none d-md-block">
+            <div class="sidebar-brand">
+                <i class="bi bi-box"></i> sigma
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar"><i class="bi bi-person text-white"></i></div>
+                <div>
+                    <div style="font-size: 0.9rem;">{{ user.first_name|default:user.username }}</div>
+                    <small style="color: #aaa; font-size: 0.75rem;">
+                        {% if user.tipo_usuario == 'M' %}Monitor{% elif user.tipo_usuario == 'P' %}Professor{% else %}Pedagógico{% endif %}
+                    </small>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a href="{% url 'login' %}"><i class="bi bi-house-door"></i> Início</a></li>
+                {% if user.tipo_usuario == 'M' %}
+                <li><a href="#"><i class="bi bi-file-earmark-arrow-up"></i> Enviar Documentos</a></li>
+                <li><a href="#"><i class="bi bi-clock-history"></i> Histórico</a></li>
+                {% elif user.tipo_usuario == 'P' %}
+                <li><a href="#"><i class="bi bi-check2-square"></i> Avaliações Pendentes</a></li>
+                <li><a href="#"><i class="bi bi-people"></i> Meus Monitores</a></li>
+                {% elif user.tipo_usuario == 'A' %}
+                <li><a href="#"><i class="bi bi-calendar-event"></i> Prazos</a></li>
+                <li><a href="#"><i class="bi bi-shield-check"></i> Auditoria de Documentos</a></li>
+                <li><a href="{% url 'listar_usuarios' %}"><i class="bi bi-person-gear"></i> Gestão de Usuários</a></li>                {% endif %}
+                <li><a href="#"><i class="bi bi-person-badge"></i> Meu Perfil</a></li>
+                <li><a href="{% url 'logout' %}" class="sair"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content flex-grow-1">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
