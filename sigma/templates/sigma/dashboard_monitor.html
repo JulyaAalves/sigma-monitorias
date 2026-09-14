@@ -1,0 +1,68 @@
+{% extends 'sigma/base.html' %}
+
+{% block content %}
+<h3 class="mb-4 text-secondary">Início - Ambiente do Monitor</h3>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="text-muted"><i class="bi bi-exclamation-triangle"></i> Próximo Prazo</h6>
+                <h3 class="mb-0">10/Set</h3>
+                <small class="text-secondary">Envio do Anexo II e Declaração</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-start border-primary border-4">
+            <div class="card-body">
+                <h6 class="text-muted"><i class="bi bi-file-earmark-check"></i> Status do Mês Atual</h6>
+                <h3 class="mb-0 text-primary">Pendente</h3>
+                <small class="text-secondary">Aguardando sua submissão</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4"> 
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="text-muted"><i class="bi bi-bell"></i> Avisos Recentes</h6>
+                <p class="mb-0 small text-danger"><b>Prof. Silva:</b> Corrigir o relatório do mês anterior.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="mb-0 text-secondary">Meus Documentos (Histórico)</h5>
+        <!-- Botão que abriria um Modal de envio -->
+        <button class="btn btn-success btn-sm"><i class="bi bi-cloud-arrow-up"></i> Nova Submissão</button>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mês Ref.</th>
+                    <th>Tipo de Documento</th>
+                    <th>Status</th>
+                    <th>Feedback/Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Agosto/2026</td>
+                    <td>Frequência Mensal (Anexo II)</td>
+                    <td><span class="badge bg-danger">Recusado</span></td>
+                    <td><span class="text-muted small">Assinatura faltando. Favor reenviar.</span></td>
+                </tr>
+                <tr>
+                    <td>Julho/2026</td>
+                    <td>Frequência Mensal (Anexo II)</td>
+                    <td><span class="badge bg-success">Aprovado</span></td>
+                    <td><button class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Ver</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

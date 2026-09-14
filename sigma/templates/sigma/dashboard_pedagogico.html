@@ -1,0 +1,104 @@
+{% extends 'sigma/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-secondary">Visão Geral - Setor Pedagógico</h3>
+    <a href="{% url 'listar_usuarios' %}" class="btn btn-outline-primary"><i class="bi bi-person-plus"></i> Gerenciar Usuários</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Monitores Ativos</h6>
+                <h2 class="mb-0">{{ total_monitores }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Professores</h6>
+                <h2 class="mb-0">{{ total_professores }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-success border-4">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Entregas no Prazo</h6>
+                <h2 class="mb-0 text-success">85%</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-start border-danger border-4">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Atrasos (Mês Atual)</h6>
+                <h2 class="mb-0 text-danger">6</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white"><i class="bi bi-calendar-check"></i> Gestão de Prazos do Semestre</div>
+            <div class="card-body">
+                <form>
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-auto"><label class="col-form-label text-muted">Prazo Mês Vigente:</label></div>
+                        <div class="col-auto"><input type="date" class="form-control" value="2026-09-10"></div>
+                        <div class="col-auto"><button class="btn btn-sm btn-success">Salvar</button></div>
+                    </div>
+                </form>
+                <div class="alert alert-info py-2 small mb-0">
+                    <i class="bi bi-info-circle"></i> O sistema enviará alertas automáticos 3 dias antes deste prazo.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white"><i class="bi bi-exclamation-triangle"></i> Alertas do Sistema</div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item text-danger small">2 professores ainda não avaliaram os documentos de Julho.</li>
+                    <li class="list-group-item text-warning small">6 monitores não enviaram a frequência de Agosto.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-2">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-search"></i> Auditoria e Controle de Documentos</span>
+        <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-arrow-down"></i> Exportar Relatório (PDF)</button>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light small">
+                <tr>
+                    <th>Monitor</th>
+                    <th>Curso</th>
+                    <th>Orientador</th>
+                    <th>Mês Ref.</th>
+                    <th>Status Final</th>
+                </tr>
+            </thead>
+            <tbody class="small">
+                <tr>
+                    <td>Julya Alves Cordeiro de Macedo</td>
+                    <td>Sistemas de Inf.</td>
+                    <td>Prof. Mendes</td>
+                    <td>Agosto/2026</td>
+                    <td><span class="badge bg-success">Validado</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

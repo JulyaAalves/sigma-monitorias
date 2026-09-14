@@ -1,0 +1,62 @@
+{% extends 'sigma/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-secondary">
+        <i class="bi bi-clock-history"></i> Histórico do Monitor
+    </h3>
+    <a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar ao Início</a>
+</div>
+
+<div class="card mb-4 border-start border-primary border-4">
+    <div class="card-body">
+        <h5 class="card-title">{{ monitoria.monitor.get_full_name }}</h5>
+        <p class="card-text text-muted mb-0">
+            <strong>Disciplina:</strong> {{ monitoria.disciplina }} <br>
+            <strong>Curso:</strong> {{ monitoria.curso }}
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 text-secondary">Documentos Entregues</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mês Ref.</th>
+                    <th>Status</th>
+                    <th>Feedback/Observação</th>
+                    <th>Arquivo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entrega in entregas %}
+                <tr>
+                    <td>{{ entrega.mes_referencia|date:"F/Y" }}</td>
+                    <td>
+                        {% if entrega.status == 'P' %}<span class="badge bg-warning text-dark">Pendente</span>
+                        {% elif entrega.status == 'A' %}<span class="badge bg-success">Aprovado</span>
+                        {% elif entrega.status == 'R' %}<span class="badge bg-danger">Recusado</span>{% endif %}
+                    </td>
+                    <td><small class="text-muted">{{ entrega.feedback_professor|default:"-" }}</small></td>
+                    <td>
+                        {% if entrega.arquivo_anexo_ii %}
+                        <a href="{{ entrega.arquivo_anexo_ii.url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-pdf"></i> Ver Anexo</a>
+                        {% else %}
+                        <span class="text-muted small">Sem arquivo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">Este aluno ainda não enviou nenhum documento.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
