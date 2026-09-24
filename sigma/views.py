@@ -1,11 +1,15 @@
-from django.shortcuts import render
-
-from django.shortcuts import render, redirect , get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
 from .models import Usuario, Monitoria, EntregaMensal
-from .forms import UsuarioCreationForm
+from .forms import UsuarioCreationForm,MonitoriaForm
+
+
+# =====================================================================
+# 1. AUTENTICAÇÃO E ROTAS GERAIS
+# =====================================================================
 
 def login_view(request):
     # Se o usuário já estiver logado, manda direto para o dashboard
@@ -13,7 +17,6 @@ def login_view(request):
         return redirecionar_dashboard(request.user)
 
     if request.method == 'POST':
-        # Como seu modelo base é o AbstractUser, o login padrão é o campo 'username'
         # O Setor Pedagógico pode usar o CPF, Matrícula ou Email como 'username' no momento de cadastrar.
         usuario_digitado = request.POST.get('username') 
         senha_digitada = request.POST.get('password')
@@ -28,6 +31,7 @@ def login_view(request):
 
     return render(request, 'sigma/login.html')
 
+
 def redirecionar_dashboard(user):
     """Função auxiliar para checar o tipo de usuário e redirecionar"""
     if user.tipo_usuario == 'A':
@@ -37,23 +41,47 @@ def redirecionar_dashboard(user):
     elif user.tipo_usuario == 'M':
         return redirect('dashboard_monitor')
     else:
-        # Se for o superuser que você criou no terminal, manda pro admin nativo
+        # Se for o superuser criado no terminal, manda pro admin nativo
         return redirect('/admin/')
+
 
 def logout_view(request):
     logout(request)
     return redirect('login')
 
-# --- VIEWS DOS DASHBOARDS (Provisórias para não dar erro de página não encontrada) ---
+
+@login_required
+def meu_perfil(request):
+    # Essa tela serve para todos os usuários (Monitor, Professor e Pedagógico)
+    return render(request, 'sigma/meu_perfil.html')
+
+
+# =====================================================================
+# 2. SETOR DO MONITOR (ESTUDANTE)
+# =====================================================================
+
 @login_required
 def dashboard_monitor(request):
-    return render(request, 'sigma/dashboard_monitor.html')
+    # Trava de segurança opcional
+    if request.user.tipo_usuario != 'M':
+        return redirecionar_dashboard(request.user)
+        
+    return render(request, 'sigma/monitor/dashboard_monitor.html')
+
+
+# =====================================================================
+# 3. SETOR DO PROFESSOR ORIENTADOR
+# =====================================================================
 
 @login_required
 def dashboard_professor(request):
+    if request.user.tipo_usuario != 'P':
+        return redirecionar_dashboard(request.user)
+
+    # 1. Busca todas as monitorias do professor
     monitorias = Monitoria.objects.filter(professor=request.user)
     
-    # 2. Busca apenas as entregas com status 'P' (Pendente) vinculadas a essas monitorias
+    # 2. Busca apenas as entregas com status 'P' (Pendente)
     entregas_pendentes = EntregaMensal.objects.filter(monitoria__in=monitorias, status='P')
     
     contexto = {
@@ -61,7 +89,8 @@ def dashboard_professor(request):
         'entregas_pendentes': entregas_pendentes,
         'qtd_pendentes': entregas_pendentes.count(),
     }
-    return render(request, 'sigma/dashboard_professor.html', contexto)
+    return render(request, 'sigma/professor/dashboard_professor.html', contexto)
+
 
 @login_required
 def avaliar_entrega(request, entrega_id, acao):
@@ -81,26 +110,53 @@ def avaliar_entrega(request, entrega_id, acao):
         entrega.save()
         messages.error(request, f'Documento devolvido para {entrega.monitoria.monitor.get_full_name()} para ajustes.')
         
-    return redirect('dashboard_professor')
+    # Redireciona de volta para a página anterior (dashboard ou lista de avaliações)
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard_professor'))
+
 
 @login_required
 def historico_monitor(request, monitoria_id):
-    # Busca a monitoria, garantindo por segurança que o aluno pertence ao professor logado
+    # Busca a monitoria, garantindo que o aluno pertence ao professor logado
     monitoria = get_object_or_404(Monitoria, id=monitoria_id, professor=request.user)
     
-    # Busca o histórico completo de entregas, ordenado da mais recente para a mais antiga
+    # Busca o histórico completo, ordenado da mais recente para a mais antiga
     entregas = EntregaMensal.objects.filter(monitoria=monitoria).order_by('-mes_referencia')
     
     contexto = {
         'monitoria': monitoria,
         'entregas': entregas
     }
-    return render(request, 'sigma/historico_monitor.html', contexto)
+    return render(request, 'sigma/professor/historico_monitor.html', contexto)
 
 
 @login_required
+def avaliacoes_pendentes(request):
+    if request.user.tipo_usuario != 'P':
+        return redirecionar_dashboard(request.user)
+    
+    entregas = EntregaMensal.objects.filter(monitoria__professor=request.user, status='P')
+    return render(request, 'sigma/professor/avaliacoes_pendentes.html', {'entregas_pendentes': entregas})
+
+
+@login_required
+def meus_monitores(request):
+    if request.user.tipo_usuario != 'P':
+        return redirecionar_dashboard(request.user)
+        
+    monitorias = Monitoria.objects.filter(professor=request.user)
+    return render(request, 'sigma/professor/meus_monitores.html', {'monitorias': monitorias})
+
+
+# =====================================================================
+# 4. SETOR PEDAGÓGICO (ADMINISTRAÇÃO)
+# =====================================================================
+
+@login_required
 def dashboard_pedagogico(request):
-   # Conta quantos usuários existem de cada tipo no banco de dados
+    if request.user.tipo_usuario != 'A' and not request.user.is_superuser:
+        return redirecionar_dashboard(request.user)
+
+    # Conta quantos usuários existem de cada tipo no banco de dados
     total_monitores = Usuario.objects.filter(tipo_usuario='M').count()
     total_professores = Usuario.objects.filter(tipo_usuario='P').count()
     
@@ -108,18 +164,21 @@ def dashboard_pedagogico(request):
         'total_monitores': total_monitores,
         'total_professores': total_professores,
     }
-    return render(request, 'sigma/dashboard_pedagogico.html', contexto)
+    return render(request, 'sigma/pedagogico/dashboard_pedagogico.html', contexto)
+
 
 @login_required
 def listar_usuarios(request):
-    # Trava de segurança: apenas Setor Pedagógico (A) acessa
+    # Trava de segurança
     if request.user.tipo_usuario != 'A' and not request.user.is_superuser:
         messages.error(request, 'Acesso restrito ao Setor Pedagógico.')
         return redirect('login')
     
     # Busca todos os usuários do banco, ordenados por nome
     usuarios = Usuario.objects.all().order_by('first_name')
-    return render(request, 'sigma/listar_usuarios.html', {'usuarios': usuarios})
+    return render(request, 'sigma/pedagogico/listar_usuarios.html', {'usuarios': usuarios})
+
+
 @login_required
 def criar_usuario(request):
     # Trava de segurança
@@ -135,4 +194,22 @@ def criar_usuario(request):
     else:
         form = UsuarioCreationForm()
         
-    return render(request, 'sigma/criar_usuario.html', {'form': form})
+    return render(request, 'sigma/pedagogico/criar_usuario.html', {'form': form})
+
+@login_required
+def criar_monitoria(request):
+    # Apenas Setor Pedagógico pode acessar essa tela
+    if request.user.tipo_usuario != 'A' and not request.user.is_superuser:
+        messages.error(request, 'Acesso restrito ao Setor Pedagógico.')
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = MonitoriaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Vínculo de monitoria criado com sucesso!')
+            return redirect('dashboard_pedagogico')
+    else:
+        form = MonitoriaForm()
+        
+    return render(request, 'sigma/pedagogico/criar_monitoria.html', {'form': form})

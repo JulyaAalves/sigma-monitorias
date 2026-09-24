@@ -1,0 +1,77 @@
+{% extends 'sigma/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-secondary"><i class="bi bi-check2-square"></i> Avaliações Pendentes</h3>
+</div>
+
+<!-- Alertas de Sucesso ou Erro -->
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for entrega in entregas_pendentes %}
+            <li class="list-group-item d-flex justify-content-between align-items-center p-4">
+                <div>
+                    <h5 class="mb-1 text-dark"><b>{{ entrega.monitoria.monitor.get_full_name|default:entrega.monitoria.monitor.username }}</b></h5>
+                    <p class="mb-1 text-muted"><i class="bi bi-journal-bookmark"></i> {{ entrega.monitoria.disciplina }} ({{ entrega.monitoria.curso }})</p>
+                    <span class="badge bg-primary"><i class="bi bi-calendar-event"></i> Frequência: {{ entrega.mes_referencia|date:"F/Y" }}</span>
+                </div>
+                <div class="btn-group">
+                    <!-- Visualizar PDF -->
+                    {% if entrega.arquivo_anexo_ii %}
+                    <a href="{{ entrega.arquivo_anexo_ii.url }}" target="_blank" class="btn btn-outline-primary" title="Visualizar Documento"><i class="bi bi-eye"></i> Ver Documento</a>
+                    {% endif %}
+                    
+                    <!-- Botão Aprovar -->
+                    <a href="{% url 'avaliar_entrega' entrega.id 'aprovar' %}" class="btn btn-success" title="Aprovar"><i class="bi bi-check-lg"></i> Aprovar</a>
+                    
+                    <!-- Botão Recusar (Abre Modal) -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalRecusa{{ entrega.id }}" title="Solicitar Ajuste"><i class="bi bi-x-lg"></i> Recusar</button>
+                </div>
+            </li>
+
+            <!-- Modal de Recusa Específico -->
+            <div class="modal fade" id="modalRecusa{{ entrega.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form method="POST" action="{% url 'avaliar_entrega' entrega.id 'recusar' %}">
+                            {% csrf_token %}
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Solicitar Ajuste de Documento</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Aluno: <b>{{ entrega.monitoria.monitor.get_full_name }}</b></p>
+                                <div class="mb-3">
+                                    <label class="form-label">Justificativa da Recusa (Feedback):</label>
+                                    <textarea class="form-control" name="motivo_recusa" rows="3" required placeholder="Ex: Faltou assinar a página 2..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-danger">Confirmar Recusa</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <li class="list-group-item text-success text-center py-5">
+                <i class="bi bi-check-circle display-4 d-block mb-3"></i>
+                <h5 class="text-secondary">Excelente!</h5>
+                <p class="text-muted mb-0">Não tem nenhuma avaliação pendente de momento.</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
